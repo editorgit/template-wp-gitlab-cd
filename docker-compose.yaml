@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "123123"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  wp:
+    depends_on:
+      - mysql
+    image: wordpress:5.2.2-php7.3-apache
+    container_name: wordpress
+    restart: unless-stopped
+    environment:
+      - WORDPRESS_DB_HOST=mysql:3306
+      - WORDPRESS_DB_USER=root
+      - WORDPRESS_DB_PASSWORD=123123
+      - WORDPRESS_DB_NAME=wordpress
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - proxy
+      - default
+    deploy:
+      labels:
+        - "traefik.port=80"
+        - "traefik.frontend.rule=PathPrefix:/"
+        - "traefik.frontend.passHostHeader=true"
+        - "traefik.frontend.whiteList.useXForwardedFor=true"
+        - "traefik.frontend.rule=Host:${APP_HOSTNAME}, www.${APP_HOSTNAME}"
+        - "traefik.frontend.redirect.regex=^https?://www.${APP_HOSTNAME}/(.*)"
+        - "traefik.frontend.redirect.replacement=https://${APP_HOSTNAME}/$${1}"
+        - "traefik.docker.network=proxy"
+
+networks:
+  default:
+    external: false
+  proxy:
+    external: true
+
+volumes:
+ mysql-data:
+ wordpress:

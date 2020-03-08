@@ -1,0 +1,28 @@
+image: docker:latest
+
+stages:
+- test
+- build
+- delivery
+- deploy
+
+deploy:
+  stage: deploy
+  variables:
+    APP_HOSTNAME: app_hostname_var
+    APP_STACK_NAME: app_stack_name_var-$CI_COMMIT_REF_SLUG
+  environment:
+    name: app_stack_name_var
+    url: https://app_hostname_var
+  script:
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - export DOCKER_HOST="tcp://116.203.94.42:2376"
+  - export DOCKER_TLS_VERIFY="1"
+  - export DOCKER_CERT_PATH="/root/.dockercerts"
+  # extract certs (collected with "tar -czf - -C $DOCKER_CERT_PATH . |base64 |pbcopy")
+  - mkdir -p $DOCKER_CERT_PATH; echo $DOCKER_CERT |base64 -d |tar xzf - -C $DOCKER_CERT_PATH
+  - docker stack deploy --compose-file docker-compose.yaml --with-registry-auth $APP_STACK_NAME
+  when: manual
+  only:
+  - master
+
