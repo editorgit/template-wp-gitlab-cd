@@ -16,7 +16,7 @@ deploy:
     url: https://app_hostname_var
   script:
   - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  - export DOCKER_HOST="tcp://116.203.94.42:2376"
+  - export DOCKER_HOST="tcp://app_docker_host:2376"
   - export DOCKER_TLS_VERIFY="1"
   - export DOCKER_CERT_PATH="/root/.dockercerts"
   # extract certs (collected with "tar -czf - -C $DOCKER_CERT_PATH . |base64 |pbcopy")
